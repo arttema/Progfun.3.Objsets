@@ -182,19 +182,6 @@ Hint: start by implementing the method mostRetweeted which returns the most popu
     mostRetweetedHelper(elem,this)
   }
 
-  //  def descendingByRetweet: TweetList = {
-  //     var res: TweetList = Nil
-  //     var list: TweetSet = this
-  //
-  //    while (list isInstanceOf NonEmpty){
-  //
-  //       val next = mostRetweeted
-  //       res = new Cons(mostRetweeted, res)
-  //       list = remove(mostRetweeted)
-  //     }
-  //     return res
-  //  }
-
   def union(that: TweetSet): TweetSet = {
     var res = that
     if(!that.contains(elem)){
@@ -214,7 +201,25 @@ Hint: start by implementing the method mostRetweeted which returns the most popu
    *
    * Hint: the method `remove` on TweetSet will be very useful.
    */
-  override def descendingByRetweet: TweetList = ???
+  def descendingByRetweet: TweetList = {
+    def h(set: TweetSet, acc: TweetList): TweetList = {
+      if(set.isEmpty)acc
+      val max: Tweet = set.mostRetweeted
+      h(set.remove(max),new Cons(max, acc))
+    }
+    h(this, Nil)
+  }
+
+//
+//  var res: TweetList = Nil
+//  var set: TweetSet = this
+//
+//  while (!set.isEmpty) {
+//    val max: Tweet = set.mostRetweeted
+//    res = new Cons(max, res)
+//    set.remove(max)
+//  }
+//  res
 
   val any: Tweet = elem
 }
@@ -285,5 +290,28 @@ lazy val trending: TweetList
 
 object Main extends App {
   // Print the trending tweets
-  GoogleVsApple.trending foreach println
+  //  GoogleVsApple.trending foreach println
+
+  val set1 = new Empty
+  val set2 = set1.incl(new Tweet("a", "a body", 20))
+  val set3 = set2.incl(new Tweet("b", "b body", 15))
+  val c = new Tweet("c", "c body", 7)
+  val d = new Tweet("d", "d body", 9)
+  val set4c = set3.incl(c)
+  val set4d = set3.incl(d)
+  val set5 = set4c.incl(d)
+
+  def asSet(tweets: TweetSet): Set[Tweet] = {
+    var res = Set[Tweet]()
+    tweets.foreach(res += _)
+    res
+  }
+  def size(set: TweetSet): Int = asSet(set).size
+
+  private val trends: TweetList = set5.descendingByRetweet
+  trends.foreach(print)
+  //
+  //  private val union: TweetSet = set4c.union(set4d)
+  //  private val value: Any = size(union) == 4
+  //  println(value)
 }
