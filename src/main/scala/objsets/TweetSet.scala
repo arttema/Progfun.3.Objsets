@@ -122,7 +122,7 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     var newAcc: TweetSet = acc
-    if(p(elem)) newAcc = newAcc.incl(elem)
+    if (p(elem)) newAcc = newAcc.incl(elem)
     newAcc = left.filterAcc(p, newAcc)
     newAcc = right.filterAcc(p, newAcc)
     newAcc
@@ -150,78 +150,30 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     right.foreach(f)
   }
 
-  /*
-  todo The more often a tweet is “re-tweeted” (that is, repeated by a different user with or without
-   additions), the more influential it is.
-
-The goal of this part of the exercise is to add a method descendingByRetweet to TweetSet which
- should produce a linear sequence of tweets (as an instance of class TweetList), ordered by their
- number of retweets:
-
-def descendingByRetweet: TweetList
-
-  This method reflects a common pattern when transforming data structures. While traversing one data
-  structure (in this case, a TweetSet), we’re building a second data structure (here, an instance of
-  class TweetList). The idea is to start with the empty list Nil (containing no tweets), and to find
-   the tweet with the most retweets in the input TweetSet. This tweet is removed from the TweetSet
-  (that is, we obtain a new TweetSet that has all the tweets of the original set except for the
-   tweet that was “removed”; this immutable set operation, remove, is already implemented for you),
-   and added to the result list by creating a new Cons. After that, the process repeats itself, but now
-   we are searching through a TweetSet with one less tweet.
-
-Hint: start by implementing the method mostRetweeted which returns the most popular tweet of a TweetSet.
-   */
   def mostRetweeted: Tweet = {
 
     def mostRetweetedHelper(current: Tweet, acc: TweetSet): Tweet = {
-      if(acc.isEmpty) return current
-      val max = if (current.retweets < acc.any.retweets) elem else current
+      if (acc.isEmpty) return current
+      val max = if (current.retweets < acc.any.retweets) acc.any else current
       mostRetweetedHelper(max, acc.remove(acc.any))
     }
 
-    mostRetweetedHelper(elem,this)
+    mostRetweetedHelper(elem, this)
   }
 
   def union(that: TweetSet): TweetSet = {
-    var res = that
-    if(!that.contains(elem)){
-      res = that.incl(elem)
-    }
-    val l = left.union(res)
-    val r = right.union(l)
-    r
+    val res = that.incl(elem)
+    val r = right.union(res)
+    left.union(r)
+    //    def con(t: Tweet): Boolean = !l.contains(t)
   }
 
   def isEmpty = false
 
-  /**
-   * Returns a list containing all tweets of this set, sorted by retweet count
-   * in descending order. In other words, the head of the resulting list should
-   * have the highest retweet count.
-   *
-   * Hint: the method `remove` on TweetSet will be very useful.
-   */
-  def descendingByRetweet: TweetList = {
-    def h(set: TweetSet, acc: TweetList): TweetList = {
-      if(set.isEmpty)acc
-      val max: Tweet = set.mostRetweeted
-      h(set.remove(max),new Cons(max, acc))
-    }
-    h(this, Nil)
-  }
+  def descendingByRetweet: TweetList =
+    new Cons(mostRetweeted, remove(mostRetweeted).descendingByRetweet)
 
-//
-//  var res: TweetList = Nil
-//  var set: TweetSet = this
-//
-//  while (!set.isEmpty) {
-//    val max: Tweet = set.mostRetweeted
-//    res = new Cons(max, res)
-//    set.remove(max)
-//  }
-//  res
-
-  val any: Tweet = elem
+  override val any: Tweet = elem
 }
 
 trait TweetList {
@@ -249,69 +201,25 @@ class Cons(val head: Tweet, val tail: TweetList) extends TweetList {
 object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
-  /*
-  todo 4 Tying everything together
 
-In the last step of this assignment your task is to detect influential tweets in a set of recent
-tweets. We are providing you with a TweetSet containing several hundred tweets from popular tech
- news sites in the past few days, located in the TweetReader object (file “TweetReader.scala”).
- TweetReader.allTweets returns an instance of TweetSet containing a set of all available tweets.
+  def isGoogle(t: Tweet): Boolean = google.exists(t.text.contains)
 
-Furthermore, you are given two lists of keywords. The first list corresponds to keywords associated
- with Google and Android smartphones, while the second list corresponds to keywords associated
-  with Apple and iOS devices. Your objective is to detect which platform has generated more
-  interest or activity in the past few days.
 
-As a first step, use the functionality you implemented in the first parts of this assignment
- to create two different TweetSets, googleTweets and appleTweets. The first TweetSet,
-  googleTweets, should contain all tweets that mention (in their “text”) one of the
-  keywords in the google list. The second TweetSet, appleTweets, should contain all
-  tweets that mention one of the keyword in the apple list. Their signature is as follows:
+  def isApple(t: Tweet): Boolean = apple.exists(t.text.contains)
 
-lazy val googleTweets: TweetSet
-lazy val appleTweets: TweetSet
+  lazy val all = TweetReader.allTweets
 
-Hint: use the exists method of List and contains method of class java.lang.String.
-
-From the union of those two TweetSets, produce trending, an instance of class TweetList
- representing a sequence of tweets ordered by their number of retweets:
-
-lazy val trending: TweetList
-   */
-  lazy val googleTweets: TweetSet = ???
-  lazy val appleTweets: TweetSet = ???
+  lazy val googleTweets: TweetSet = all.filter(isGoogle)
+  lazy val appleTweets: TweetSet = all.filter(isApple)
 
   /**
    * A list of all tweets mentioning a keyword from either apple or google,
    * sorted by the number of retweets.
    */
-  lazy val trending: TweetList = ???
+  lazy val trending: TweetList = googleTweets.union(appleTweets).descendingByRetweet
 }
 
 object Main extends App {
   // Print the trending tweets
-  //  GoogleVsApple.trending foreach println
-
-  val set1 = new Empty
-  val set2 = set1.incl(new Tweet("a", "a body", 20))
-  val set3 = set2.incl(new Tweet("b", "b body", 15))
-  val c = new Tweet("c", "c body", 7)
-  val d = new Tweet("d", "d body", 9)
-  val set4c = set3.incl(c)
-  val set4d = set3.incl(d)
-  val set5 = set4c.incl(d)
-
-  def asSet(tweets: TweetSet): Set[Tweet] = {
-    var res = Set[Tweet]()
-    tweets.foreach(res += _)
-    res
-  }
-  def size(set: TweetSet): Int = asSet(set).size
-
-  private val trends: TweetList = set5.descendingByRetweet
-  trends.foreach(print)
-  //
-  //  private val union: TweetSet = set4c.union(set4d)
-  //  private val value: Any = size(union) == 4
-  //  println(value)
+  GoogleVsApple.trending foreach println
 }
