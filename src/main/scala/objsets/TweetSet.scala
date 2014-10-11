@@ -161,12 +161,7 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     mostRetweetedHelper(elem, this)
   }
 
-  def union(that: TweetSet): TweetSet = {
-    val res = that.incl(elem)
-    val r = right.union(res)
-    left.union(r)
-    //    def con(t: Tweet): Boolean = !l.contains(t)
-  }
+  def union(that: TweetSet): TweetSet = left.union(right.union(that.incl(elem)))
 
   def isEmpty = false
 
